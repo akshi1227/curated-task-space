@@ -1,6 +1,7 @@
 
 export interface Task {
-  id: string;
+  _id?: string;
+  id?: string; // Keep for compatibility with existing code
   title: string;
   description: string;
   dueDate: string;

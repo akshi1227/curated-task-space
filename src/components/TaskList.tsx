@@ -22,7 +22,7 @@ const TaskList = ({ tasks, onCompleteTask, onUpdateTask, onDeleteTask }: TaskLis
     <div className="space-y-4">
       {tasks.map((task) => (
         <TaskItem
-          key={task.id}
+          key={task._id || task.id}
           task={task}
           onComplete={onCompleteTask}
           onUpdate={onUpdateTask}
