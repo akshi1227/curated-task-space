@@ -1,53 +1,71 @@
 
 import { Task, TaskFormData } from '../types';
-import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Use localStorage for storing tasks instead of a backend API
+const STORAGE_KEY = 'taskmate_tasks';
 
-// Configure axios instance
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// API functions
-export const getTasks = async (): Promise<Task[]> => {
+// Helper functions for localStorage
+const getTasks = async (): Promise<Task[]> => {
   try {
-    const response = await api.get('/tasks');
-    return response.data;
+    const tasksJson = localStorage.getItem(STORAGE_KEY);
+    if (tasksJson) {
+      return JSON.parse(tasksJson);
+    }
+    return [];
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error fetching tasks from localStorage:', error);
     return [];
   }
 };
 
-export const createTask = async (task: TaskFormData): Promise<Task> => {
+const createTask = async (taskData: TaskFormData): Promise<Task> => {
   try {
-    const response = await api.post('/tasks', task);
-    return response.data;
+    const tasks = await getTasks();
+    const newTask: Task = {
+      ...taskData,
+      id: `task_${Date.now()}`, // Generate a unique ID
+      _id: `task_${Date.now()}`, // Keep both ID formats for compatibility
+      completed: false
+    };
+    
+    tasks.push(newTask);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    return newTask;
   } catch (error) {
-    console.error('Error creating task:', error);
+    console.error('Error creating task in localStorage:', error);
     throw error;
   }
 };
 
-export const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
+const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
   try {
-    const response = await api.patch(`/tasks/${id}`, updates);
-    return response.data;
+    const tasks = await getTasks();
+    const taskIndex = tasks.findIndex(task => task.id === id || task._id === id);
+    
+    if (taskIndex === -1) {
+      throw new Error('Task not found');
+    }
+    
+    tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    
+    return tasks[taskIndex];
   } catch (error) {
-    console.error('Error updating task:', error);
+    console.error('Error updating task in localStorage:', error);
     throw error;
   }
 };
 
-export const deleteTask = async (id: string): Promise<void> => {
+const deleteTask = async (id: string): Promise<void> => {
   try {
-    await api.delete(`/tasks/${id}`);
+    const tasks = await getTasks();
+    const filteredTasks = tasks.filter(task => task.id !== id && task._id !== id);
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredTasks));
   } catch (error) {
-    console.error('Error deleting task:', error);
+    console.error('Error deleting task from localStorage:', error);
     throw error;
   }
 };
+
+export { getTasks, createTask, updateTask, deleteTask };
