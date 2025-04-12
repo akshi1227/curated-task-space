@@ -21,10 +21,12 @@ const getTasks = async (): Promise<Task[]> => {
 const createTask = async (taskData: TaskFormData): Promise<Task> => {
   try {
     const tasks = await getTasks();
+    const uniqueId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
     const newTask: Task = {
       ...taskData,
-      id: `task_${Date.now()}`, // Generate a unique ID
-      _id: `task_${Date.now()}`, // Keep both ID formats for compatibility
+      id: uniqueId,
+      _id: uniqueId, // Keep both ID formats for compatibility
       completed: false
     };
     
@@ -46,10 +48,11 @@ const updateTask = async (id: string, updates: Partial<Task>): Promise<Task> => 
       throw new Error('Task not found');
     }
     
-    tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
+    const updatedTask = { ...tasks[taskIndex], ...updates };
+    tasks[taskIndex] = updatedTask;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     
-    return tasks[taskIndex];
+    return updatedTask;
   } catch (error) {
     console.error('Error updating task in localStorage:', error);
     throw error;
